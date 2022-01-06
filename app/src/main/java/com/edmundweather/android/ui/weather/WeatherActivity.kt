@@ -1,13 +1,18 @@
 package com.edmundweather.android.ui.weather
 
+import android.content.Context
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.edmundweather.android.R
@@ -18,36 +23,68 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class WeatherActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityWeatherBinding
     val viewModel by lazy { ViewModelProviders.of(this).get(WeatherViewModel::class.java) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val decorView = window.decorView
-        decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         window.statusBarColor = Color.TRANSPARENT
 
         binding = ActivityWeatherBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        if(viewModel.locationlng.isEmpty()){
-        viewModel.locationlng = intent.getStringExtra("location_lng") ?: ""
+
+        if (viewModel.locationlng.isEmpty()) {
+            viewModel.locationlng = intent.getStringExtra("location_lng") ?: ""
         }
-        if(viewModel.locationLat.isEmpty()){
-            viewModel.locationLat = intent.getStringExtra("location_lat") ?:""
+        if (viewModel.locationLat.isEmpty()) {
+            viewModel.locationLat = intent.getStringExtra("location_lat") ?: ""
         }
-        if(viewModel.placeName.isEmpty()){
-            viewModel.placeName = intent.getStringExtra("place_name") ?:""
+        if (viewModel.placeName.isEmpty()) {
+            viewModel.placeName = intent.getStringExtra("place_name") ?: ""
         }
-        viewModel.weatherLiveData.observe(this, Observer { result -> val weather = result.getOrNull()
-            if(weather != null) {
+        viewModel.weatherLiveData.observe(this, Observer { result ->
+            val weather = result.getOrNull()
+            if (weather != null) {
                 showWeatherInfo(weather)
-            }else{
-                Toast.makeText(this,"无法成功获取天气信息",Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "无法成功获取天气信息", Toast.LENGTH_SHORT).show()
                 result.exceptionOrNull()?.printStackTrace()
             }
+            binding.swipeRefresh.isRefreshing = false
         })
-        viewModel.refreshWeather(viewModel.locationlng,viewModel.locationLat)
+        binding.swipeRefresh.setColorSchemeResources(R.color.colorPrimary)
+        refreshWeather()
+        binding.swipeRefresh.setOnClickListener{
+            refreshWeather()
+        }
+
+        binding1.navBtn.setOnClickListener{
+            binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
+        binding.drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener{
+            override fun onDrawerStateChanged(newState: Int) {
+            }
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+            }
+            override fun onDrawerOpened(drawerView: View) {
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                manager.hideSoftInputFromWindow(drawerView.windowToken,InputMethodManager.HIDE_NOT_ALWAYS)
+            }
+        })
     }
+
+    fun refreshWeather() {
+        viewModel.refreshWeather(viewModel.locationlng, viewModel.locationLat)
+        binding.swipeRefresh.isRefreshing = true
+    }
+
     private lateinit var binding1: NowBinding
     private lateinit var binding2: ForecastBinding
     private lateinit var binding3: ForecastItemBinding
