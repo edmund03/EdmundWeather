@@ -7,7 +7,7 @@ import java.security.AccessControlContext
 
 class EdmundWeatherApplication : Application(){
     companion object{
-        const val TOKEN = ""
+        const val TOKEN = "auv03EiB3Zt9RZcn"
         @SuppressLint("StaticFieldLeak")
         lateinit var context: Context
     }
